@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Caldris v1</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <div class="eyebrow">CALDRIS / PROTOTYPE V1</div>
+        <h1>Write math. Keep the meaning alive.</h1>
+        <p>Handwritten equations become editable expressions, solvable steps, and reactive variables.</p>
+      </div>
+      <div id="healthBadge" class="health">checking runtime…</div>
+    </header>
+
+    <div class="pipeline" aria-label="Prototype pipeline">
+      <span>Ink</span><b>→</b><span>OCR</span><b>→</b><span>Parse</span><b>→</b><span>Solve</span><b>→</b><span>Variables</span>
+    </div>
+
+    <section class="grid">
+      <article class="card canvas-card">
+        <div class="card-head">
+          <div>
+            <div class="kicker">01 / INK</div>
+            <h2>Scratch canvas</h2>
+          </div>
+          <div class="actions compact">
+            <button id="undoButton" class="ghost">Undo</button>
+            <button id="clearButton" class="ghost">Clear</button>
+          </div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="inkCanvas" aria-label="Handwriting canvas"></canvas>
+          <div class="canvas-hint">Write one equation here</div>
+        </div>
+        <button id="recognizeButton" class="primary full">Recognize handwriting</button>
+        <p id="recognitionStatus" class="status">OCR is optional. You can always type or correct the expression manually.</p>
+      </article>
+
+      <article class="card solve-card">
+        <div class="card-head">
+          <div>
+            <div class="kicker">02 / SEMANTIC SOLVE</div>
+            <h2>Recognized expression</h2>
+          </div>
+          <button id="exampleButton" class="ghost">Load example</button>
+        </div>
+
+        <label for="expressionInput">Expression</label>
+        <input id="expressionInput" class="math-input" value="2x + 4 = 10" autocomplete="off" spellcheck="false" />
+        <button id="solveButton" class="primary full">Solve expression</button>
+
+        <div class="result-block">
+          <div class="result-label">Variables</div>
+          <div id="variablesOutput" class="chips muted">No solve yet</div>
+        </div>
+
+        <div class="result-block">
+          <div class="result-label">Solution</div>
+          <div id="solutionOutput" class="solution muted">No solve yet</div>
+        </div>
+
+        <div class="result-block">
+          <div class="result-label">Steps</div>
+          <ol id="stepsOutput" class="steps"><li class="muted">Solve an expression to inspect the derivation.</li></ol>
+        </div>
+      </article>
+    </section>
+
+    <section class="card workspace-card">
+      <div class="card-head">
+        <div>
+          <div class="kicker">03 / REACTIVE VARIABLES</div>
+          <h2>Variable workspace</h2>
+          <p>Edit one assignment and evaluate again. Dependencies are resolved from the definitions, not from line order.</p>
+        </div>
+        <button id="evaluateButton" class="primary">Evaluate workspace</button>
+      </div>
+
+      <div class="workspace-grid">
+        <div>
+          <label for="workspaceInput">Definitions</label>
+          <textarea id="workspaceInput" class="workspace-input" spellcheck="false">a = 5
+b = 3
+c = a + b</textarea>
+        </div>
+        <div>
+          <div class="result-label">Resolved state</div>
+          <div id="workspaceOutput" class="workspace-output muted">Evaluate the workspace to resolve variables.</div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <span>Caldris v1</span>
+      <span>Prototype scope: handwriting → structure → computation</span>
+    </footer>
+  </main>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

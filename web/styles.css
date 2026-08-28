@@ -1,0 +1,286 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #f4f1e8;
+  background: #0b0d10;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(73, 101, 128, 0.18), transparent 32rem),
+    radial-gradient(circle at 100% 10%, rgba(191, 145, 73, 0.10), transparent 30rem),
+    #0b0d10;
+}
+
+button, input, textarea { font: inherit; }
+button { cursor: pointer; }
+
+.shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0 32px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 32px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.eyebrow, .kicker, .result-label, label {
+  color: #8e9bab;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.hero h1 {
+  margin: 8px 0 10px;
+  max-width: 760px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.3rem, 6vw, 5rem);
+  line-height: 0.98;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+.hero p, .workspace-card .card-head p {
+  color: #9da5ae;
+  max-width: 720px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.health {
+  flex: 0 0 auto;
+  border: 1px solid #2d333b;
+  background: #11151a;
+  color: #aeb7c2;
+  border-radius: 999px;
+  padding: 9px 12px;
+  font-size: 0.8rem;
+}
+
+.health.ready { color: #b7e3bc; border-color: #285338; }
+.health.partial { color: #f2d28d; border-color: #604c25; }
+
+.pipeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 0 22px;
+  color: #73808d;
+  font-size: 0.78rem;
+}
+.pipeline span {
+  border: 1px solid #252b32;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: rgba(17, 21, 26, 0.72);
+}
+.pipeline b { color: #4d5965; }
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
+  gap: 18px;
+}
+
+.card {
+  border: 1px solid #242a31;
+  border-radius: 20px;
+  background: rgba(16, 19, 23, 0.92);
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.22);
+  padding: 20px;
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+.card h2 { margin: 4px 0 0; font-size: 1.05rem; font-weight: 650; }
+
+.actions { display: flex; gap: 8px; }
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+button:active { transform: translateY(1px); }
+button:disabled { opacity: 0.55; cursor: progress; }
+
+.primary {
+  background: #e7dbc2;
+  color: #121519;
+  font-weight: 750;
+}
+.primary:hover { background: #f0e7d5; }
+.ghost {
+  color: #b9c1ca;
+  background: #171b20;
+  border: 1px solid #2a3038;
+}
+.ghost:hover { background: #1d232a; }
+.full { width: 100%; }
+.compact button { padding: 8px 11px; }
+
+.canvas-wrap {
+  position: relative;
+  height: 390px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f4f0e5;
+  border: 1px solid #4b4d4c;
+}
+
+#inkCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.canvas-hint {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  color: rgba(27, 31, 35, 0.35);
+  font-size: 0.78rem;
+  pointer-events: none;
+}
+
+.status {
+  color: #7f8993;
+  min-height: 20px;
+  margin: 10px 2px 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.status.error { color: #f0a3a3; }
+.status.success { color: #a9d8ae; }
+
+label { display: block; margin: 6px 0 8px; }
+.math-input, .workspace-input {
+  width: 100%;
+  border: 1px solid #313840;
+  border-radius: 12px;
+  outline: none;
+  background: #0c1014;
+  color: #f5efe4;
+}
+.math-input {
+  padding: 15px 16px;
+  margin-bottom: 10px;
+  font-family: "Cambria Math", Georgia, serif;
+  font-size: 1.2rem;
+}
+.math-input:focus, .workspace-input:focus { border-color: #77899b; }
+
+.result-block {
+  margin-top: 18px;
+  border-top: 1px solid #252b32;
+  padding-top: 14px;
+}
+.result-label { margin-bottom: 10px; }
+.muted { color: #727d88; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip {
+  display: inline-flex;
+  border: 1px solid #303841;
+  border-radius: 999px;
+  padding: 6px 9px;
+  background: #13181e;
+  color: #c4ccd5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+}
+
+.solution {
+  min-height: 34px;
+  font-family: "Cambria Math", Georgia, serif;
+  font-size: 1.35rem;
+}
+.steps {
+  margin: 0;
+  padding-left: 24px;
+}
+.steps li {
+  padding: 7px 0;
+  border-bottom: 1px dashed #252b32;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.88rem;
+}
+
+.workspace-card { margin-top: 18px; }
+.workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
+}
+.workspace-input {
+  min-height: 190px;
+  resize: vertical;
+  padding: 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  line-height: 1.65;
+}
+.workspace-output {
+  min-height: 190px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.variable-row {
+  display: grid;
+  grid-template-columns: minmax(70px, 0.35fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #282f36;
+  background: #0e1216;
+  border-radius: 11px;
+  padding: 10px 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.84rem;
+}
+.variable-row .symbol { color: #f0dfba; font-weight: 700; }
+.variable-row .dependency { color: #6f7c88; font-size: 0.73rem; }
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 4px 0;
+  color: #59636d;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 850px) {
+  .hero { flex-direction: column; }
+  .grid, .workspace-grid { grid-template-columns: 1fr; }
+  .canvas-wrap { height: 330px; }
+  .workspace-card .card-head { flex-direction: column; }
+}
+
+@media (max-width: 520px) {
+  .shell { width: min(100% - 18px, 1180px); padding-top: 26px; }
+  .card { border-radius: 15px; padding: 14px; }
+  .card-head { flex-direction: column; }
+  .canvas-wrap { height: 280px; }
+  footer { flex-direction: column; }
+}

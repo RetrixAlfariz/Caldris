@@ -1,0 +1,27 @@
+[project]
+name = "caldris"
+version = "0.1.0"
+description = "Semantic handwritten computation prototype for mathematics and engineering"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "antlr4-python3-runtime==4.11.*",
+    "fastapi>=0.116,<1",
+    "python-multipart>=0.0.20,<1",
+    "sympy>=1.14,<2",
+    "uvicorn[standard]>=0.35,<1",
+]
+
+[project.optional-dependencies]
+ocr = [
+    "texteller",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4,<9",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
