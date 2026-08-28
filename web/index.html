@@ -19,30 +19,27 @@
     </header>
 
     <div class="pipeline" aria-label="Prototype pipeline">
-      <span>Live ink</span><b>→</b><span>Capture</span><b>→</b><span>OCR</span><b>→</b><span>Solve</span><b>→</b><span>Variables</span>
+      <span>Ink</span><b>→</b><span>Local ONNX</span><b>→</b><span>Parse</span><b>→</b><span>Solve</span><b>→</b><span>Variables</span>
     </div>
 
     <section class="grid">
       <article class="card canvas-card">
         <div class="card-head">
           <div>
-            <div class="kicker">01 / LIVE INK</div>
-            <h2>Scratch canvas</h2>
+            <div class="kicker">01 / INK</div>
+            <h2>Live scratch canvas</h2>
           </div>
           <div class="actions compact">
             <button id="undoButton" class="ghost">Undo</button>
             <button id="clearButton" class="ghost">Clear</button>
           </div>
         </div>
-
-        <p class="status">Live capture is automatic when OCR is available. Pause briefly after writing; manual capture remains available below.</p>
-
         <div class="canvas-wrap">
           <canvas id="inkCanvas" aria-label="Handwriting canvas"></canvas>
-          <div class="canvas-hint">Write one equation · pause ~900 ms for live capture</div>
+          <div class="canvas-hint">Write one equation here</div>
         </div>
-        <button id="recognizeButton" class="primary full">Capture now</button>
-        <p id="recognitionStatus" class="status">Checking whether the OCR adapter is available…</p>
+        <button id="recognizeButton" class="primary full">Recognize now</button>
+        <p id="recognitionStatus" class="status">Texo ONNX loads once in your browser; handwritten crops stay local unless the optional fallback is needed.</p>
       </article>
 
       <article class="card solve-card">

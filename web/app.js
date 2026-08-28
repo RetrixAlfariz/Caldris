@@ -36,6 +36,7 @@ function pointFromEvent(event) {
     x: event.clientX - rect.left,
     y: event.clientY - rect.top,
     pressure: event.pressure || 0.5,
+    t: performance.now(),
   };
 }
 
@@ -126,29 +127,6 @@ function exportCanvasBlob() {
     }, "image/png");
   });
 }
-
-document.querySelector("#recognizeButton").addEventListener("click", async (event) => {
-  const button = event.currentTarget;
-  button.disabled = true;
-  setRecognitionStatus("Sending ink to the recognition adapter…");
-
-  try {
-    const blob = await exportCanvasBlob();
-    const form = new FormData();
-    form.append("file", blob, "caldris-ink.png");
-    const result = await api("/api/recognize", { method: "POST", body: form });
-    if (result.text) {
-      expressionInput.value = result.text;
-      setRecognitionStatus(`${result.engine}: ${result.message}`, "success");
-    } else {
-      setRecognitionStatus(result.message, result.available ? "error" : "");
-    }
-  } catch (error) {
-    setRecognitionStatus(error.message, "error");
-  } finally {
-    button.disabled = false;
-  }
-});
 
 function renderVariables(variables) {
   variablesOutput.innerHTML = "";
@@ -253,16 +231,11 @@ document.querySelector("#evaluateButton").addEventListener("click", async (event
 
 async function loadHealth() {
   try {
-    const health = await api("/api/health");
-    if (health.ocr.available) {
-      healthBadge.textContent = "runtime ready · OCR ready";
-      healthBadge.className = "health ready";
-    } else {
-      healthBadge.textContent = "runtime ready · OCR optional";
-      healthBadge.className = "health partial";
-    }
+    await api("/api/health");
+    healthBadge.textContent = "semantic runtime ready · ONNX loading";
+    healthBadge.className = "health partial";
   } catch {
-    healthBadge.textContent = "runtime unavailable";
+    healthBadge.textContent = "semantic runtime unavailable";
   }
 }
 

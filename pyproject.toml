@@ -1,6 +1,6 @@
 [project]
 name = "caldris"
-version = "0.1.1"
+version = "0.2.0"
 description = "Semantic handwritten computation prototype for mathematics and engineering"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
@@ -13,11 +13,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ocr = [
-    "numpy>=1.26,<3",
-    "paddleocr>=3.3,<4",
-    "pillow>=10,<13",
-]
 ocr-texteller = [
     "texteller",
 ]

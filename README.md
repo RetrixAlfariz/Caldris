@@ -1,19 +1,21 @@
 # Caldris
 
-**Caldris** is a semantic handwritten computation prototype for mathematics and engineering.
+**Caldris** is an open-source-oriented semantic handwritten computation prototype for mathematics and engineering.
 
-The `v1` branch is intentionally narrow: prove that handwritten math can become editable, solvable, variable-aware computation before adding heavier engineering semantics.
+The `v1` branch stays deliberately narrow: prove that handwriting can become an editable, solvable, variable-aware computational object before Caldris grows into a full engineering notebook.
 
 ## Prototype flow
 
 ```text
-Live ink canvas
+live ink canvas
     ↓
 ink bounding-box crop
     ↓
-PP-FormulaNet_plus-S (resident primary OCR)
+Texo / FormulaNet ONNX
+(browser Web Worker, primary)
     ↓
-TexTeller CLI (optional fallback)
+TexTeller CLI
+(optional backend fallback)
     ↓
 editable recognized expression
     ↓
@@ -24,14 +26,20 @@ simple derivation steps
 reactive variable workspace
 ```
 
+## Why ONNX-first
+
+Caldris no longer puts PaddleOCR in the live path. The primary recognizer is `alephpi/FormulaNet` (Texo), a 20M-parameter formula-recognition model with ONNX weights. It runs in a browser worker through Transformers.js, so repeated handwriting recognition does not require a Python ML runtime, PaddlePaddle, image upload to the backend, or model reload per stroke.
+
+The backend remains responsible for deterministic computation. Recognition is an adapter and can be replaced later by a stroke-native `Caldris-HMER` model without redesigning the solver.
+
 ## What works in v1
 
 - Pointer/stylus/mouse drawing canvas with undo and clear.
-- Automatic live capture after a short writing pause.
-- Ink-region cropping instead of sending the whole canvas.
-- Resident `PP-FormulaNet_plus-S` recognition through PaddleOCR's Python API.
-- Optional TexTeller CLI fallback.
-- Stale OCR results are discarded when new ink is added.
+- Automatic live recognition after a short writing pause.
+- Ink-region cropping instead of processing the whole canvas.
+- Browser-side ONNX inference in a Web Worker.
+- Stale recognition results are discarded when new ink is added.
+- Optional TexTeller backend fallback.
 - Editable recognition result, so OCR mistakes do not block the prototype.
 - Single-expression solving with SymPy.
 - Human-readable steps for basic linear equations and simple quadratic factorization.
@@ -54,36 +62,7 @@ uv run uvicorn caldris.main:app --reload
 
 Open `http://127.0.0.1:8000`.
 
-## Enable fast live handwriting OCR
-
-Install the Caldris OCR dependencies:
-
-```bash
-uv sync --extra ocr --group dev
-```
-
-PaddleOCR also requires PaddlePaddle itself. Install the PaddlePaddle build appropriate for your machine (CPU or GPU) following the official Paddle installation instructions. Caldris does not pin a CPU PaddlePaddle wheel because doing so could replace a GPU installation.
-
-Then run:
-
-```bash
-uv run uvicorn caldris.main:app --reload
-```
-
-Caldris will warm `PP-FormulaNet_plus-S` once after the page loads and keep the model resident. Subsequent captures call the same model instance directly with an in-memory image array.
-
-Optional device override:
-
-```bash
-CALDRIS_OCR_DEVICE=gpu:0 uv run uvicorn caldris.main:app --reload
-```
-
-On PowerShell:
-
-```powershell
-$env:CALDRIS_OCR_DEVICE="gpu:0"
-uv run uvicorn caldris.main:app --reload
-```
+On the first recognition session the browser downloads the Texo ONNX model from Hugging Face and caches browser assets where supported. The handwriting crop is then processed locally in the browser worker. A network connection is therefore currently required for the first model load; vendored/offline model packaging is a later deployment task.
 
 ### Optional TexTeller fallback
 
@@ -91,27 +70,27 @@ uv run uvicorn caldris.main:app --reload
 uv sync --extra ocr-texteller --group dev
 ```
 
-If PaddleOCR cannot initialize and TexTeller is installed, Caldris falls back to the TexTeller CLI. If neither backend is available, the canvas and deterministic solver still work and the recognized expression remains manually editable.
-
-See [`docs/OCR_RUNTIME.md`](docs/OCR_RUNTIME.md) for the optimized recognition path.
+If local browser ONNX initialization or a prediction fails, Caldris can use the backend `POST /api/recognize` path when TexTeller is installed. If no fallback exists, recognition remains manually editable and the deterministic solver still works.
 
 ## Live-capture behavior
 
 ```text
 pen stroke
     ↓
-pause ~420 ms (stylus) / ~650 ms (mouse or touch)
+pause ~320 ms (stylus) / ~520 ms (mouse or touch)
     ↓
 crop current ink bounds + padding
     ↓
-resident PP-FormulaNet_plus-S
+Texo ONNX in Web Worker
     ↓
-LaTeX
+LaTeX-like expression
+    ↓
+Caldris parser
     ↓
 solver + steps
 ```
 
-If the user starts another stroke while OCR is still running, that older result is treated as stale and is not applied to the page.
+The model worker is initialized once. New strokes invalidate older in-flight predictions so stale formulas cannot overwrite newer handwriting.
 
 ## Demo scenarios
 
@@ -146,10 +125,35 @@ Caldris resolves `c = 8`. Change `a = 5` to `a = 7`, evaluate again, and `c` bec
 ## API
 
 - `GET /api/health`
-- `POST /api/ocr/warmup` — load the primary OCR model once and keep it resident
-- `POST /api/recognize` — multipart image upload
+- `POST /api/recognize` — optional backend fallback only
 - `POST /api/solve` — `{ "expression": "2x + 4 = 10" }`
 - `POST /api/workspace/evaluate` — `{ "lines": ["a=5", "b=3", "c=a+b"] }`
+
+The primary ONNX recognizer does **not** need an API endpoint because it runs inside the browser.
+
+## Model strategy
+
+Prototype recognition and the eventual Caldris model are intentionally separate:
+
+```text
+v1
+Texo ONNX image recognizer
+        ↓
+benchmark real Caldris handwriting
+        ↓
+collect opt-in engineering handwriting corrections
+        ↓
+Caldris-HMER
+stroke-native small Transformer + CTC
+        ↓
+ONNX / browser runtime
+```
+
+See [`docs/MODEL_STRATEGY.md`](docs/MODEL_STRATEGY.md) and [`DATA_PROVENANCE.md`](DATA_PROVENANCE.md).
+
+## Third-party model note
+
+`alephpi/FormulaNet` is loaded as an external model and is **not vendored into this repository**. Its current Hugging Face model card identifies it as AGPL-3.0. Caldris source licensing and model licensing should remain explicitly tracked rather than silently coupling the entire project to one prototype recognizer. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 ## Run tests
 
@@ -168,4 +172,4 @@ Not implemented yet:
 - A custom stroke-native HMER model.
 - General-purpose derivation for arbitrary symbolic mathematics.
 
-Those belong after the prototype interaction proves itself. See [`docs/PROTOTYPE_V1.md`](docs/PROTOTYPE_V1.md).
+See [`docs/PROTOTYPE_V1.md`](docs/PROTOTYPE_V1.md).

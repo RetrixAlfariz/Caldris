@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from caldris.recognition import ocr_status, recognize_image, warmup_ocr
+from caldris.recognition import fallback_ocr_status, recognize_image
 from caldris.solver import solve_expression
 from caldris.workspace import evaluate_workspace
 
@@ -17,7 +17,7 @@ WEB_DIR = ROOT / "web"
 
 app = FastAPI(
     title="Caldris",
-    version="0.1.1",
+    version="0.2.0",
     description="Semantic handwritten computation prototype",
 )
 app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
@@ -41,17 +41,26 @@ def health() -> dict[str, object]:
     return {
         "status": "ok",
         "prototype": "v1",
-        "ocr": ocr_status(),
+        "recognition": {
+            "primary": {
+                "engine": "texo-onnx-browser",
+                "model": "alephpi/FormulaNet",
+                "execution": "browser-worker",
+                "network_needed_on_first_load": True,
+            },
+            "fallback": fallback_ocr_status(),
+        },
     }
-
-
-@app.post("/api/ocr/warmup")
-async def warmup() -> dict[str, object]:
-    return await run_in_threadpool(warmup_ocr)
 
 
 @app.post("/api/recognize")
 async def recognize(file: UploadFile = File(...)) -> dict[str, object]:
+    """Optional backend fallback recognition.
+
+    The hot path is browser-side ONNX. This endpoint remains available when
+    TexTeller is installed or when the user explicitly requests a fallback.
+    """
+
     image = await file.read()
     if not image:
         raise HTTPException(status_code=400, detail="Uploaded image is empty.")

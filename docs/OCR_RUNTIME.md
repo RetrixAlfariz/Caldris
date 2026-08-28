@@ -1,40 +1,49 @@
-# Caldris OCR runtime
+# Caldris recognition runtime
 
-Caldris v1 uses a two-tier formula recognizer.
+Caldris v1 is ONNX-first.
 
-1. **Primary:** `PP-FormulaNet_plus-S` through PaddleOCR's in-process `FormulaRecognition` API.
-2. **Fallback:** TexTeller CLI when PaddleOCR is unavailable or initialization fails.
+1. **Primary:** Texo / `alephpi/FormulaNet` ONNX in a browser Web Worker.
+2. **Fallback:** TexTeller CLI through the backend when explicitly installed.
 
-The primary model is lazy-loaded once and kept resident for subsequent requests. Live capture crops to the current ink bounding box before upload, so empty canvas space is not repeatedly sent through the recognizer.
+PaddleOCR and PaddlePaddle are no longer required by the v1 hot path.
 
-## Install
+## Primary path
 
-```bash
-uv sync --extra ocr --group dev
+```text
+pointer/stylus strokes
+        ↓
+canvas ink crop
+        ↓
+Web Worker
+        ↓
+Transformers.js + ONNX Runtime Web
+        ↓
+alephpi/FormulaNet
+        ↓
+recognized expression
 ```
 
-PaddleOCR requires PaddlePaddle. Install the PaddlePaddle build appropriate for the machine (CPU or GPU) according to the official Paddle installation instructions. Caldris intentionally does not pin a CPU PaddlePaddle wheel because that would replace or conflict with GPU installations.
+The worker loads the model once and reuses it. The first model load currently comes from Hugging Face; later loads can use browser caching where available.
 
-Optional TexTeller fallback:
+The v1 worker intentionally rasterizes the current stroke cluster because Texo is an image recognizer. Raw stroke timing/order remain retained by the canvas so a future stroke-native model can replace this adapter.
+
+## Optional backend fallback
 
 ```bash
 uv sync --extra ocr-texteller --group dev
 ```
 
-## Runtime knobs
+The fallback endpoint is `POST /api/recognize`. It is not called during normal local ONNX inference.
 
-```text
-CALDRIS_OCR_MODEL=PP-FormulaNet_plus-S
-CALDRIS_OCR_DEVICE=gpu:0
-```
+## Live behavior
 
-Leave `CALDRIS_OCR_DEVICE` unset to let PaddleOCR choose the available device.
+- Stylus pause debounce: ~320 ms.
+- Mouse/touch pause debounce: ~520 ms.
+- Only the current ink bounding box is exported, with padding.
+- ONNX inference happens off the UI thread.
+- Stale predictions are discarded when the user resumes writing.
+- Backend upload occurs only if the local recognizer fails and a fallback is installed.
 
-## Live-capture behavior
+## Current deployment limitation
 
-- Stylus pause debounce: ~420 ms.
-- Mouse/touch pause debounce: ~650 ms.
-- Only the bounding box containing ink is exported, with padding.
-- Stale inference results are discarded if the user starts writing again.
-- In-flight model prediction is serialized because a single resident model instance is shared.
-- The frontend warms the resident model after page load when PaddleOCR is available.
+The Transformers.js library and Texo model are fetched remotely on first load. A production/offline build should vendor pinned runtime assets and model files or provide a local model cache. That deployment concern is deliberately separated from the semantic prototype.
