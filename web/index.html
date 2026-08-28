@@ -19,14 +19,14 @@
     </header>
 
     <div class="pipeline" aria-label="Prototype pipeline">
-      <span>Ink</span><b>→</b><span>OCR</span><b>→</b><span>Parse</span><b>→</b><span>Solve</span><b>→</b><span>Variables</span>
+      <span>Live ink</span><b>→</b><span>Capture</span><b>→</b><span>OCR</span><b>→</b><span>Solve</span><b>→</b><span>Variables</span>
     </div>
 
     <section class="grid">
       <article class="card canvas-card">
         <div class="card-head">
           <div>
-            <div class="kicker">01 / INK</div>
+            <div class="kicker">01 / LIVE INK</div>
             <h2>Scratch canvas</h2>
           </div>
           <div class="actions compact">
@@ -34,12 +34,15 @@
             <button id="clearButton" class="ghost">Clear</button>
           </div>
         </div>
+
+        <p class="status">Live capture is automatic when OCR is available. Pause briefly after writing; manual capture remains available below.</p>
+
         <div class="canvas-wrap">
           <canvas id="inkCanvas" aria-label="Handwriting canvas"></canvas>
-          <div class="canvas-hint">Write one equation here</div>
+          <div class="canvas-hint">Write one equation · pause ~900 ms for live capture</div>
         </div>
-        <button id="recognizeButton" class="primary full">Recognize handwriting</button>
-        <p id="recognitionStatus" class="status">OCR is optional. You can always type or correct the expression manually.</p>
+        <button id="recognizeButton" class="primary full">Capture now</button>
+        <p id="recognitionStatus" class="status">Checking whether the OCR adapter is available…</p>
       </article>
 
       <article class="card solve-card">
@@ -98,10 +101,11 @@ c = a + b</textarea>
 
     <footer>
       <span>Caldris v1</span>
-      <span>Prototype scope: handwriting → structure → computation</span>
+      <span>Prototype scope: live handwriting → structure → computation</span>
     </footer>
   </main>
 
   <script src="/static/app.js" defer></script>
+  <script src="/static/live.js" defer></script>
 </body>
 </html>
