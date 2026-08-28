@@ -88,7 +88,7 @@ async function runLiveCapture(revision) {
     liveCaptureQueued = true;
     return;
   }
-  if (!strokes.length || revision === liveCaptureLastRevision) return;
+  if (!strokes.length || drawing || revision === liveCaptureLastRevision) return;
 
   liveCaptureBusy = true;
   setRecognitionStatus("Live capture · recognizing cropped ink…");
@@ -105,7 +105,7 @@ async function runLiveCapture(revision) {
 
     // A new pen stroke invalidates an older OCR result. Do not let stale
     // recognition overwrite what the user is currently writing.
-    if (revision !== liveCaptureRevision) {
+    if (revision !== liveCaptureRevision || drawing) {
       liveCaptureQueued = true;
       return;
     }
@@ -127,11 +127,15 @@ async function runLiveCapture(revision) {
     setRecognitionStatus(error.message, "error");
   } finally {
     liveCaptureBusy = false;
-    if (liveCaptureQueued && strokes.length) {
+    if (liveCaptureQueued) {
       liveCaptureQueued = false;
-      cancelLiveCapture();
-      const queuedRevision = liveCaptureRevision;
-      window.setTimeout(() => runLiveCapture(queuedRevision), 80);
+      // Never launch inference while a stroke is still being drawn. Pointer-up
+      // will schedule the normal debounced capture when the ink is complete.
+      if (strokes.length && !drawing) {
+        cancelLiveCapture();
+        const queuedRevision = liveCaptureRevision;
+        window.setTimeout(() => runLiveCapture(queuedRevision), 80);
+      }
     }
   }
 }
