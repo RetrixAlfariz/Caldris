@@ -7,23 +7,31 @@ The `v1` branch is intentionally narrow: prove that handwritten math can become 
 ## Prototype flow
 
 ```text
-Ink canvas
+Live ink canvas
     ↓
-TexTeller adapter (optional)
+ink bounding-box crop
     ↓
-Editable recognized expression
+PP-FormulaNet_plus-S (resident primary OCR)
+    ↓
+TexTeller CLI (optional fallback)
+    ↓
+editable recognized expression
     ↓
 SymPy parser / solver
     ↓
-Simple derivation steps
+simple derivation steps
     ↓
-Reactive variable workspace
+reactive variable workspace
 ```
 
 ## What works in v1
 
 - Pointer/stylus/mouse drawing canvas with undo and clear.
-- Optional TexTeller CLI adapter for handwritten formula recognition.
+- Automatic live capture after a short writing pause.
+- Ink-region cropping instead of sending the whole canvas.
+- Resident `PP-FormulaNet_plus-S` recognition through PaddleOCR's Python API.
+- Optional TexTeller CLI fallback.
+- Stale OCR results are discarded when new ink is added.
 - Editable recognition result, so OCR mistakes do not block the prototype.
 - Single-expression solving with SymPy.
 - Human-readable steps for basic linear equations and simple quadratic factorization.
@@ -46,28 +54,70 @@ uv run uvicorn caldris.main:app --reload
 
 Open `http://127.0.0.1:8000`.
 
-### Enable handwriting OCR
+## Enable fast live handwriting OCR
 
-TexTeller is optional because it is substantially heavier than the semantic prototype itself.
+Install the Caldris OCR dependencies:
 
 ```bash
 uv sync --extra ocr --group dev
+```
+
+PaddleOCR also requires PaddlePaddle itself. Install the PaddlePaddle build appropriate for your machine (CPU or GPU) following the official Paddle installation instructions. Caldris does not pin a CPU PaddlePaddle wheel because doing so could replace a GPU installation.
+
+Then run:
+
+```bash
 uv run uvicorn caldris.main:app --reload
 ```
 
-Caldris detects the `texteller` CLI automatically and calls:
+Caldris will warm `PP-FormulaNet_plus-S` once after the page loads and keep the model resident. Subsequent captures call the same model instance directly with an in-memory image array.
+
+Optional device override:
 
 ```bash
-texteller inference <image>
+CALDRIS_OCR_DEVICE=gpu:0 uv run uvicorn caldris.main:app --reload
 ```
 
-If TexTeller is unavailable, the canvas still works and the recognized-expression field can be edited manually. This is deliberate: OCR is an adapter, not the core runtime.
+On PowerShell:
+
+```powershell
+$env:CALDRIS_OCR_DEVICE="gpu:0"
+uv run uvicorn caldris.main:app --reload
+```
+
+### Optional TexTeller fallback
+
+```bash
+uv sync --extra ocr-texteller --group dev
+```
+
+If PaddleOCR cannot initialize and TexTeller is installed, Caldris falls back to the TexTeller CLI. If neither backend is available, the canvas and deterministic solver still work and the recognized expression remains manually editable.
+
+See [`docs/OCR_RUNTIME.md`](docs/OCR_RUNTIME.md) for the optimized recognition path.
+
+## Live-capture behavior
+
+```text
+pen stroke
+    ↓
+pause ~420 ms (stylus) / ~650 ms (mouse or touch)
+    ↓
+crop current ink bounds + padding
+    ↓
+resident PP-FormulaNet_plus-S
+    ↓
+LaTeX
+    ↓
+solver + steps
+```
+
+If the user starts another stroke while OCR is still running, that older result is treated as stale and is not applied to the page.
 
 ## Demo scenarios
 
 ### Step solving
 
-Enter or recognize:
+Write, type, or recognize:
 
 ```text
 2x + 4 = 10
@@ -96,6 +146,7 @@ Caldris resolves `c = 8`. Change `a = 5` to `a = 7`, evaluate again, and `c` bec
 ## API
 
 - `GET /api/health`
+- `POST /api/ocr/warmup` — load the primary OCR model once and keep it resident
 - `POST /api/recognize` — multipart image upload
 - `POST /api/solve` — `{ "expression": "2x + 4 = 10" }`
 - `POST /api/workspace/evaluate` — `{ "lines": ["a=5", "b=3", "c=a+b"] }`
@@ -111,6 +162,7 @@ uv run pytest
 Not implemented yet:
 
 - Engineering units and dimensional analysis.
+- Multi-equation spatial clustering on one large page.
 - Persistent notebooks or accounts.
 - Diagram/circuit/FBD recognition.
 - A custom stroke-native HMER model.
